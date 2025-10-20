@@ -10,7 +10,7 @@ Useful for formatting text data, preparing strings for code, or processing struc
 - Strip whitespace before wrapping
 - Skip empty lines
 - Escape delimiter characters within lines
-- Read from files or STDIN
+- Read from files or STDIN (auto-detects piped input - `-` is optional when reading from a pipe)
 - Write to files or STDOUT
 - Process null-terminated input (compatible with `find -print0`, `xargs -0`)
 - Automatically skip empty last lines
@@ -30,7 +30,7 @@ This creates the `wrapline` executable in the current directory.
 ## Usage
 
 ```
-wrapline [options] <filename|-]
+wrapline [options] <filename|->
 ```
 
 ### Options
@@ -49,6 +49,7 @@ wrapline [options] <filename|-]
 
 - Provide a filename to read from a file
 - Use `-` to read from STDIN
+- When data is piped into `wrapline`, reading from STDIN is assumed automatically — the `-` argument is optional
 
 ## Examples
 
@@ -167,11 +168,17 @@ wrapline -d "|" input.txt -o output.txt
 
 ### Read from STDIN
 
-Process piped input:
+`wrapline` automatically reads from piped input, so the `-` argument is optional:
+
+```bash
+echo "hello world" | wrapline
+cat input.txt | wrapline -d "'" -s
+```
+
+You can still use `-` explicitly if preferred:
 
 ```bash
 echo "hello world" | wrapline -
-cat input.txt | wrapline -d "'" -s -
 ```
 
 ### Null-terminated input
@@ -194,6 +201,16 @@ wrapline -s -e -escape -o output.txt input.txt
 
 # Process null-terminated, custom delimiter, output to file
 find . -type f -print0 | wrapline -0 -d "'" -o filelist.txt -
+```
+
+### Create a single-line, comma-delimited list
+
+`wrapline` can be used in conjunction with `paste` to produce a CSV-style list:
+
+```bash
+seq 1 10 | wrapline | paste -sd, -
+
+"1","2","3","4","5","6","7","8","9","10"
 ```
 
 ## Common Use Cases
@@ -251,3 +268,4 @@ wrapline -s -e messy_data.txt -o clean_data.txt
 - The `-s` flag strips whitespace before checking if a line is empty
 - Hexadecimal delimiter values must be prefixed with `0x`
 - Without the `0x` prefix, numeric strings are treated as literal delimiters
+- `wrapline` automatically detects piped input and does not require `-` when reading from a pipe

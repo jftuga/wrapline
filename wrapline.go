@@ -25,11 +25,13 @@ import (
 	"os"
 	"strconv"
 	"strings"
+
+	"golang.org/x/term"
 )
 
 const pgmName string = "wrapline"
 const pgmURL string = "https://github.com/jftuga/wrapline"
-const pgmVersion string = "1.0.0"
+const pgmVersion string = "1.1.0"
 
 // parseDelimiter converts a delimiter argument to a string.
 // If the argument starts with "0x", it is interpreted as a hexadecimal
@@ -103,11 +105,22 @@ func main() {
 
 	// Get filename from remaining arguments
 	args := flag.Args()
-	if len(args) != 1 {
+	// Determine whether stdin is a terminal
+	inputIsTerminal := term.IsTerminal(int(os.Stdin.Fd()))
+
+	var filename string
+	switch {
+	case len(args) == 1:
+		// User explicitly provided a filename or "-"
+		filename = args[0]
+	case len(args) == 0 && !inputIsTerminal:
+		// No filename, but data is being piped in
+		filename = "-"
+	default:
+		// Anything else is an error
 		fmt.Fprintln(os.Stderr, "Error: exactly one filename (or '-' for STDIN) required")
 		os.Exit(1)
 	}
-	filename := args[0]
 
 	// Open input source
 	var input io.Reader
