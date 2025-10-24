@@ -31,7 +31,7 @@ import (
 
 const pgmName string = "wrapline"
 const pgmURL string = "https://github.com/jftuga/wrapline"
-const pgmVersion string = "1.1.0"
+const pgmVersion string = "1.1.1"
 
 // parseDelimiter converts a delimiter argument to a string.
 // If the argument starts with "0x", it is interpreted as a hexadecimal

@@ -1,0 +1,97 @@
+version: 2
+
+before:
+  hooks:
+    - go mod tidy
+    - go build
+    - go test -v ./...
+
+builds:
+  - id: wrapline
+    binary: wrapline
+    ldflags:
+      - -extldflags "-static" -s -w -X main.commit={{.Commit}} -X main.date={{.Date}} -X main.builtBy=goreleaser -X main.Version={{.Version}} -X main.Revision={{.ShortCommit}}
+    env:
+      - CGO_ENABLED=0
+    goos:
+      - linux
+      - freebsd
+      - darwin
+    goarch:
+      - amd64
+      - arm64
+      - arm
+      - ppc64le
+    goarm:
+      - "7"
+    ignore:
+      - goos: freebsd
+        goarch: arm64
+      - goos: freebsd
+        goarch: arm
+      - goos: freebsd
+        goarch: ppc64le
+      - goos: darwin
+        goarch: arm
+      - goos: darwin
+        goarch: ppc64le
+
+  - id: wrapline-win
+    binary: wrapline
+    ldflags:
+      - -extldflags "-static" -s -w -X main.commit={{.Commit}} -X main.date={{.Date}} -X main.builtBy=goreleaser -X main.Version={{.Version}} -X main.Revision={{.ShortCommit}}
+    env:
+      - CGO_ENABLED=0
+    goos:
+      - windows
+    goarch:
+      - amd64
+    hooks:
+      post:
+        - upx -9 "{{ .Path }}"
+
+archives:
+  - name_template: "{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
+    formats:
+      - tar.xz
+    format_overrides:
+      - goos: windows
+        formats:
+          - zip
+    wrap_in_directory: true
+    files:
+      - LICENSE
+      - README.md
+
+checksum:
+  name_template: "{{ .ProjectName }}_{{ .Version }}--checksums.txt"
+
+release:
+  draft: false
+
+changelog:
+  sort: asc
+  filters:
+    exclude:
+      - "^docs:"
+      - "^test:"
+
+homebrew_casks:
+  - name: wrapline
+    repository:
+      owner: jftuga
+      name: homebrew-tap
+      token: "{{ .Env.HOMEBREW_TOKEN }}"
+    commit_author:
+      name: jftuga
+      email: jftuga@users.noreply.github.com
+    homepage: https://github.com/jftuga/wrapline
+    description: "CLI tool that wraps each line of input with a specified delimiter"
+    binaries:
+      - wrapline
+    hooks:
+      post:
+        install: |
+          if OS.mac?
+            system_command "/usr/bin/xattr", args: ["-dr", "com.apple.quarantine", "#{staged_path}/wrapline"]
+          end
