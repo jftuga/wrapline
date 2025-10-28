@@ -89,11 +89,13 @@ homebrew_casks:
     homepage: https://github.com/jftuga/wrapline
     url:
       verified: github.com/jftuga/wrapline
+    # Specify the full path to the binary within the wrapped directory
+    # This matches the archive structure created by wrap_in_directory: true
     binaries:
-      - wrapline
+      - "{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}/wrapline"
     hooks:
       post:
         install: |
           if OS.mac?
-            system_command "/usr/bin/xattr", args: ["-dr", "com.apple.quarantine", "#{staged_path}/wrapline"]
+            system_command "/usr/bin/xattr", args: ["-dr", "com.apple.quarantine", "#{staged_path}/{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}/wrapline"]
           end
